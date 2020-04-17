@@ -6,6 +6,12 @@ import (
   "os"
   "strings"
 )
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("%s %s %s %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		handler.ServeHTTP(w, r)
+	})
+}
 func serve(w http.ResponseWriter, r *http.Request) {
   env := map[string]string{}
   for _, keyval := range os.Environ() {
@@ -22,7 +28,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 func main() {
   fmt.Printf("Starting httpenv listening on port 8888.\n")
   http.HandleFunc("/", serve)
-  if err := http.ListenAndServe(":8888", nil); err != nil {
+  if err := http.ListenAndServe(":8888", logRequest(http.DefaultServeMux)); err != nil {
     panic(err)
   }
 }
